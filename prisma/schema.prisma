@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id            Int       @id @default(autoincrement())
+  name          String
+  type          String    // Dealer, End User, etc.
+  gst_number    String?
+  industry_type String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  branches      Branch[]
+  contacts      Contact[]
+  addresses     Address[]
+  orders        Order[]
+  
+  user_id       String     @default("unknown")
+
+  @@index([user_id])
+  @@map("customers")
+}
+
+model Branch {
+  id          Int      @id @default(autoincrement())
+  customer_id Int
+  name        String
+  location    String?
+  manager     String?
+  
+  customer    Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@map("branches")
+}
+
+model Contact {
+  id          Int      @id @default(autoincrement())
+  customer_id Int
+  name        String?
+  email       String?
+  phone1      String?
+  phone2      String?
+  
+  customer    Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@map("contacts")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  customer_id  Int
+  address_type String   // billing, shipping
+  line1        String?
+  line2        String?
+  state        String?
+  country      String?  @default("India")
+  pincode      String?
+  
+  customer     Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model Order {
+  id               Int      @id @default(autoincrement())
+  customer_id      Int
+  branch_id        Int?
+  order_number     String   @unique
+  order_date       DateTime @default(now())
+  status           String   @default("Pending")
+  year             Int?
+  product_type     String?
+  product_code     String?
+  size             String?
+  quantity         Int?
+  unit_price       Float?
+  conversion_rate  Float?   @default(1.0)
+  unit_price_inr   Float?
+  total_price      Float?
+  tax_amount       Float?
+  final_amount     Float?
+  basic_value      Float?
+  delivery_date    DateTime?
+  invoice_no       String?
+  invoice_date     DateTime?
+  user_id          String   @default("unknown")
+  
+  customer         Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("orders")
+}
+
+model Permission {
+  id                Int      @id @default(autoincrement())
+  owner_id          String   // UID of the person who owns the data
+  owner_email       String?  // Optional: Email of the owner for display
+  shared_with_email String   // Email of the person getting access
+  access_level      String   // READ, WRITE
+  created_at        DateTime @default(now())
+
+  @@index([owner_id])
+  @@index([shared_with_email])
+  @@map("permissions")
+}

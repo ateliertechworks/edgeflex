@@ -1,0 +1,21 @@
+Year,Order_No,Customer,Branch,Industry,Location,Product_Type,Size,Quantity,Basic_Value,Tax,Delivery_Date,Invoice_No,Invoice_Date
+2024,OR1001,ABC Industries,Head Office,Power,Chennai,MEJ,10 inch,2,15000,2700,12-01-2024,INV2001,15-01-2024
+2024,OR1002,Delta Cement,Plant 1,Cement,Coimbatore,FEJ,1200 mm,1,25000,4500,20-01-2024,INV2002,
+2024,OR1003,Global Steel,Main Gate,Steel,Salem,MEJ,8 inch,5,12000,2160,25-01-2024,INV2003,28-01-2024
+2024,OR1004,Zenith Energy,Substation B,Power,Bangalore,FEJ,1000 mm,3,30000,5400,02-02-2024,INV2004,05-02-2024
+2024,OR1005,Titan Motors,Unit 4,Automobile,Hosur,MEJ,12 inch,1,18000,3240,10-02-2024,INV2005,
+2024,OR1006,UltraTech Cement,Main Plant,Cement,Ariyalur,FEJ,1500 mm,2,40000,7200,15-02-2024,INV2006,18-02-2024
+2024,OR1007,BHEL,Factory,Power,Trichy,MEJ,14 inch,4,22000,3960,20-02-2024,INV2007,
+2024,OR1008,TATA Steel,Gate 2,Steel,Jamshedpur,FEJ,2000 mm,1,55000,9900,01-03-2024,INV2008,04-03-2024
+2024,OR1009,Reliance Power,Phase 1,Power,Jamnagar,MEJ,16 inch,2,28000,5040,10-03-2024,INV2009,12-03-2024
+2024,OR1010,JSW Steel,Plant 4,Steel,Bellary,FEJ,1100 mm,3,32000,5760,15-03-2024,INV2010,
+2024,OR1011,NTPC,Unit 2,Power,Ramagundam,MEJ,10 inch,5,15000,2700,20-03-2024,INV2011,22-03-2024
+2024,OR1012,Dalmia Cement,Warehouse,Cement,Trichy,FEJ,900 mm,2,22000,3960,25-03-2024,INV2012,
+2024,OR1013,L&T Construction,Site A,Construction,Chennai,MEJ,12 inch,10,18000,3240,05-04-2024,INV2013,08-04-2024
+2024,OR1014,MRF Tyres,Plant 3,Automobile,Perambalur,FEJ,1300 mm,4,29000,5220,12-04-2024,INV2014,15-04-2024
+2024,OR1015,Sail Steel,Main Unit,Steel,Bhilai,MEJ,18 inch,1,35000,6300,20-04-2024,INV2015,
+2024,OR1016,Vedanta,Mine 1,Mining,Goa,FEJ,1600 mm,2,42000,7560,02-05-2024,INV2016,05-05-2024
+2024,OR1017,Adani Power,Phase 2,Power,Mundra,MEJ,14 inch,6,22000,3960,10-05-2024,INV2017,
+2024,OR1018,Hindalco,Unit 5,Aluminium,Renukoot,FEJ,1400 mm,3,38000,6840,15-05-2024,INV2018,18-05-2024
+2024,OR1019,Hero MotoCorp,Assembly,Automobile,Gurgaon,MEJ,10 inch,8,15000,2700,22-05-2024,INV2019,25-05-2024
+2024,OR1020,Ambuja Cement,Plant 2,Cement,Roorkee,FEJ,1200 mm,2,25000,4500,28-05-2024,INV2020,
