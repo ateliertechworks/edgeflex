@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Building2, Loader2, Plus, ArrowLeft, Mail, Phone, Factory, CreditCard, MapPin, ShieldCheck
+  Building2, Loader2, Plus, ArrowLeft, Mail, Phone, Factory, MapPin, ShieldCheck
 } from 'lucide-react';
 import { Customer } from '../types';
 import { dbService } from '../services/db_service';
@@ -20,10 +20,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onBack, onSuccess, e
     industry_type: 'Power',
     branches: [{ name: 'Head Office', location: '', manager: '' }],
     contacts: [{ name: '', email: '', phone1: '', phone2: '' }],
-    addresses: [
-      { address_type: 'billing', line1: '', line2: '', state: '', country: 'India', pincode: '' },
-      { address_type: 'shipping', line1: '', line2: '', state: '', country: 'India', pincode: '' }
-    ]
+    address_lines: [''],
+    state: '',
+    country: 'India',
+    pincode: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -71,18 +71,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onBack, onSuccess, e
     }
   };
 
-  const copyBillingToShipping = () => {
-    const billing = formData.addresses?.find((a: any) => a.address_type === 'billing');
-    if (billing) {
-      setFormData({
-        ...formData,
-        addresses: [
-          billing,
-          { ...billing, address_type: 'shipping' }
-        ]
-      });
-    }
-  };
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -143,299 +132,354 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onBack, onSuccess, e
             </div>
             <div className="space-y-1">
               <label className="industrial-label">Industry Type</label>
-              <select 
-                className="industrial-input"
-                value={formData.industry_type}
-                onChange={(e) => setFormData({...formData, industry_type: e.target.value as any})}
-              >
-                <option>Power</option>
-                <option>Cement</option>
-                <option>Fertiliser</option>
-                <option>Steel</option>
-                <option>Petro Chemicals</option>
-                <option>Others</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Branch Details */}
-        <div className="industrial-card p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-            <Factory className="w-4 h-4 text-[#1A1A1A]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Branch Details</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label className="industrial-label">Branch Name</label>
-              <input 
-                type="text" 
-                className="industrial-input" 
-                placeholder="e.g. Head Office"
-                value={formData.branches?.[0].name}
-                onChange={(e) => {
-                  const branches = [...(formData.branches || [])];
-                  branches[0].name = e.target.value;
-                  setFormData({...formData, branches});
-                }}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Location</label>
-              <input 
-                type="text" 
-                className="industrial-input" 
-                placeholder="e.g. Chennai"
-                value={formData.branches?.[0].location}
-                onChange={(e) => {
-                  const branches = [...(formData.branches || [])];
-                  branches[0].location = e.target.value;
-                  setFormData({...formData, branches});
-                }}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Branch Manager</label>
-              <input 
-                type="text" 
-                className="industrial-input" 
-                placeholder="Optional"
-                value={formData.branches?.[0].manager}
-                onChange={(e) => {
-                  const branches = [...(formData.branches || [])];
-                  branches[0].manager = e.target.value;
-                  setFormData({...formData, branches});
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Details */}
-        <div className="industrial-card p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-[#F0F0F0] pb-3 mb-6">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#1A1A1A]" />
-                <h3 className="text-sm font-bold uppercase tracking-wider">Contact Module</h3>
+              <div className="flex gap-2">
+                <select 
+                  className="industrial-input flex-1"
+                  value={formData.industry_type === 'Power' || formData.industry_type === 'Cement' || formData.industry_type === 'Fertiliser' || formData.industry_type === 'Steel' || formData.industry_type === 'Petro Chemicals' ? formData.industry_type : 'Others'}
+                  onChange={(e) => {
+                    if (e.target.value === 'Others') {
+                      setFormData({...formData, industry_type: '' as any});
+                    } else {
+                      setFormData({...formData, industry_type: e.target.value as any});
+                    }
+                  }}
+                >
+                  <option value="">Select or enter custom</option>
+                  <option>Power</option>
+                  <option>Cement</option>
+                  <option>Fertiliser</option>
+                  <option>Steel</option>
+                  <option>Petro Chemicals</option>
+                  <option value="Others">Others (Custom)</option>
+                </select>
+                <input
+                  type="text"
+                  className="industrial-input flex-1"
+                  placeholder="Type custom industry"
+                  value={formData.industry_type && !['Power', 'Cement', 'Fertiliser', 'Steel', 'Petro Chemicals'].includes(formData.industry_type) ? formData.industry_type : ''}
+                  onChange={(e) => setFormData({...formData, industry_type: e.target.value as any})}
+                />
               </div>
-              <button 
-                type="button"
-                onClick={() => {
-                  setFormData({
-                    ...formData,
-                    contacts: [...formData.contacts, { name: '', email: '', phone1: '', phone2: '' }]
-                  });
-                }}
-                className="text-[10px] font-bold text-black/40 hover:text-black uppercase tracking-widest transition-colors flex items-center gap-1"
-              >
-                <Plus className="w-3 h-3" /> Add Contact
-              </button>
             </div>
-            <div className="space-y-8">
-              {formData.contacts?.map((contact: any, idx: number) => (
-                <div key={idx} className="relative space-y-4 pt-4 first:pt-0">
-                  {idx > 0 && (
-                    <div className="absolute -top-1 left-0 right-0 border-t border-dashed border-[#F0F0F0]" />
-                  )}
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-bold text-[#999999] uppercase">Contact Person {idx + 1}</span>
-                    {idx > 0 && (
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          const newContacts = [...formData.contacts];
-                          newContacts.splice(idx, 1);
-                          setFormData({ ...formData, contacts: newContacts });
-                        }}
-                        className="text-[10px] font-bold text-red-500/60 hover:text-red-600 uppercase"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <label className="industrial-label">Contact Person Name</label>
-                      <input 
-                        type="text" 
-                        className="industrial-input" 
-                        placeholder="Owner / Manager Name"
-                        value={contact.name || ''}
-                        onChange={(e) => {
-                          const contacts = [...(formData.contacts || [])];
-                          contacts[idx] = { ...contacts[idx], name: e.target.value };
-                          setFormData({...formData, contacts});
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="industrial-label">Email ID</label>
-                      <input 
-                        type="email" 
-                        className="industrial-input" 
-                        placeholder="sales@company.com"
-                        value={contact.email || ''}
-                        onChange={(e) => {
-                          const contacts = [...(formData.contacts || [])];
-                          contacts[idx] = { ...contacts[idx], email: e.target.value };
-                          setFormData({...formData, contacts});
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-1">
-                      <label className="industrial-label">Mobile Number 1</label>
-                      <input 
-                        type="tel" 
-                        className="industrial-input" 
-                        placeholder="+91..."
-                        value={contact.phone1 || ''}
-                        onChange={(e) => {
-                          const contacts = [...(formData.contacts || [])];
-                          contacts[idx] = { ...contacts[idx], phone1: e.target.value };
-                          setFormData({...formData, contacts});
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="industrial-label">Mobile Number 2</label>
-                      <input 
-                        type="tel" 
-                        className="industrial-input" 
-                        placeholder="Optional"
-                        value={contact.phone2 || ''}
-                        onChange={(e) => {
-                          const contacts = [...(formData.contacts || [])];
-                          contacts[idx] = { ...contacts[idx], phone2: e.target.value };
-                          setFormData({...formData, contacts});
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          </div>
         </div>
+
+{/* Contact Details */}
+<div className="industrial-card p-6 space-y-6">
+  <div className="flex items-center justify-between border-b border-[#F0F0F0] pb-3 mb-6">
+    <div className="flex items-center gap-2">
+      <Mail className="w-4 h-4 text-[#1A1A1A]" />
+      <h3 className="text-sm font-bold uppercase tracking-wider">
+        Contact Module
+      </h3>
+    </div>
+
+    <button
+      type="button"
+      onClick={() => {
+        setFormData({
+          ...formData,
+          contacts: [
+            ...(formData.contacts || []),
+            {
+              name: "",
+              designation: "",
+              email: "",
+              phoneNumbers: [""],
+            },
+          ],
+        });
+      }}
+      className="text-[10px] font-bold text-black/40 hover:text-black uppercase tracking-widest transition-colors flex items-center gap-1"
+    >
+      <Plus className="w-3 h-3" /> Add Contact
+    </button>
+  </div>
+
+  <div className="space-y-8">
+    {formData.contacts?.map((contact: any, idx: number) => (
+      <div key={idx} className="relative space-y-4 pt-4 first:pt-0">
+
+        {idx > 0 && (
+          <div className="absolute -top-1 left-0 right-0 border-t border-dashed border-[#F0F0F0]" />
+        )}
+
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[10px] font-bold text-[#999999] uppercase">
+            Contact Person {idx + 1}
+          </span>
+
+          {idx > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const newContacts = [...formData.contacts];
+                newContacts.splice(idx, 1);
+
+                setFormData({
+                  ...formData,
+                  contacts: newContacts,
+                });
+              }}
+              className="text-[10px] font-bold text-red-500/60 hover:text-red-600 uppercase"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+
+        {/* Name + Designation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <label className="industrial-label">
+              Contact Person Name
+            </label>
+
+            <input
+              type="text"
+              className="industrial-input"
+              placeholder="Owner / Manager Name"
+              value={contact.name || ""}
+              onChange={(e) => {
+                const contacts = [...formData.contacts];
+
+                contacts[idx] = {
+                  ...contacts[idx],
+                  name: e.target.value,
+                };
+
+                setFormData({
+                  ...formData,
+                  contacts,
+                });
+              }}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="industrial-label">
+              Designation
+            </label>
+
+            <input
+              type="text"
+              className="industrial-input"
+              placeholder="Manager / Sales Head"
+              value={contact.designation || ""}
+              onChange={(e) => {
+                const contacts = [...formData.contacts];
+
+                contacts[idx] = {
+                  ...contacts[idx],
+                  designation: e.target.value,
+                };
+
+                setFormData({
+                  ...formData,
+                  contacts,
+                });
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="space-y-1">
+          <label className="industrial-label">Email ID</label>
+
+          <input
+            type="email"
+            className="industrial-input"
+            placeholder="sales@company.com"
+            value={contact.email || ""}
+            onChange={(e) => {
+              const contacts = [...formData.contacts];
+
+              contacts[idx] = {
+                ...contacts[idx],
+                email: e.target.value,
+              };
+
+              setFormData({
+                ...formData,
+                contacts,
+              });
+            }}
+          />
+        </div>
+
+        {/* Dynamic Mobile Numbers */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="industrial-label">
+              Mobile Numbers
+            </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                const contacts = [...formData.contacts];
+
+                contacts[idx].phoneNumbers = [
+                  ...(contacts[idx].phoneNumbers || []),
+                  "",
+                ];
+
+                setFormData({
+                  ...formData,
+                  contacts,
+                });
+              }}
+              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-black/50 hover:text-black"
+            >
+              <Plus className="w-3 h-3" />
+              Add Number
+            </button>
+          </div>
+
+          {(contact.phoneNumbers || []).map(
+            (phone: string, phoneIdx: number) => (
+              <div
+                key={phoneIdx}
+                className="flex gap-3 items-center"
+              >
+                <input
+                  type="tel"
+                  className="industrial-input flex-1"
+                  placeholder="+91 XXXXX XXXXX"
+                  value={phone}
+                  onChange={(e) => {
+                    const contacts = [...formData.contacts];
+
+                    contacts[idx].phoneNumbers[phoneIdx] =
+                      e.target.value;
+
+                    setFormData({
+                      ...formData,
+                      contacts,
+                    });
+                  }}
+                />
+
+                {phoneIdx > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const contacts = [...formData.contacts];
+
+                      contacts[idx].phoneNumbers.splice(
+                        phoneIdx,
+                        1
+                      );
+
+                      setFormData({
+                        ...formData,
+                        contacts,
+                      });
+                    }}
+                    className="text-red-500 text-xs font-bold uppercase"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 
         {/* Address Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Billing Address */}
-          <div className="industrial-card p-6 space-y-6">
-            <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-              <CreditCard className="w-4 h-4 text-[#1A1A1A]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider">Billing Address</h3>
+        <div className="industrial-card p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-[#F0F0F0] pb-3 mb-6">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#1A1A1A]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider">Address</h3>
             </div>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="industrial-label">Address Line 1</label>
-                <input 
-                  type="text" 
-                  className="industrial-input" 
-                  placeholder="Street, Suite, Unit"
-                  value={formData.addresses?.find((a: any) => a.address_type === 'billing')?.line1 || ''}
-                  onChange={(e) => {
-                    const addresses = [...(formData.addresses || [])];
-                    const idx = addresses.findIndex(a => a.address_type === 'billing');
-                    if (idx !== -1) addresses[idx].line1 = e.target.value;
-                    setFormData({...formData, addresses});
-                  }}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="industrial-label">State</label>
-                  <input 
-                    type="text" 
-                    className="industrial-input" 
-                    value={formData.addresses?.find((a: any) => a.address_type === 'billing')?.state || ''}
-                    onChange={(e) => {
-                      const addresses = [...(formData.addresses || [])];
-                      const idx = addresses.findIndex(a => a.address_type === 'billing');
-                      if (idx !== -1) addresses[idx].state = e.target.value;
-                      setFormData({...formData, addresses});
-                    }}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="industrial-label">Pin Code</label>
-                  <input 
-                    type="text" 
-                    className="industrial-input" 
-                    value={formData.addresses?.find((a: any) => a.address_type === 'billing')?.pincode || ''}
-                    onChange={(e) => {
-                      const addresses = [...(formData.addresses || [])];
-                      const idx = addresses.findIndex(a => a.address_type === 'billing');
-                      if (idx !== -1) addresses[idx].pincode = e.target.value;
-                      setFormData({...formData, addresses});
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+            <button 
+              type="button"
+              onClick={() => {
+                setFormData({
+                  ...formData,
+                  address_lines: [...(formData.address_lines || []), '']
+                });
+              }}
+              className="text-[10px] font-bold text-black/40 hover:text-black uppercase tracking-widest transition-colors flex items-center gap-1"
+            >
+              <Plus className="w-3 h-3" /> Add Address Line
+            </button>
           </div>
-
-          {/* Shipping Address */}
-          <div className="industrial-card p-6 space-y-6">
-            <div className="flex items-center justify-between border-b border-[#F0F0F0] pb-3 mb-6">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#1A1A1A]" />
-                <h3 className="text-sm font-bold uppercase tracking-wider">Shipping Address</h3>
+          <div className="space-y-4">
+            {formData.address_lines?.map((line: any, idx: number) => (
+              <div key={idx} className="flex gap-3 items-end">
+                <div className="flex-1 space-y-1">
+                  <label className="industrial-label">{idx === 0 ? 'Address Line' : `Address Line ${idx + 1}`}</label>
+                  <input 
+                    type="text" 
+                    className="industrial-input" 
+                    placeholder="Street, Suite, Unit"
+                    value={line || ''}
+                    onChange={(e) => {
+                      const address_lines = [...(formData.address_lines || [])];
+                      address_lines[idx] = e.target.value;
+                      setFormData({...formData, address_lines});
+                    }}
+                  />
+                </div>
+                {idx > 0 && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newAddressLines = [...formData.address_lines];
+                      newAddressLines.splice(idx, 1);
+                      setFormData({ ...formData, address_lines: newAddressLines });
+                    }}
+                    className="text-[10px] font-bold text-red-500/60 hover:text-red-600 uppercase mb-1"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
-              <button 
-                type="button"
-                onClick={copyBillingToShipping}
-                className="text-[10px] font-bold text-black/40 hover:text-black uppercase tracking-widest transition-colors"
-              >
-                Same as Billing
-              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-[#F0F0F0]">
+            <div className="space-y-1">
+              <label className="industrial-label">State</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                placeholder="State name"
+                value={formData.state || ''}
+                onChange={(e) => {
+                  setFormData({...formData, state: e.target.value});
+                }}
+              />
             </div>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="industrial-label">Address Line 1</label>
-                <input 
-                  type="text" 
-                  className="industrial-input" 
-                  placeholder="Street, Suite, Unit"
-                  value={formData.addresses?.find((a: any) => a.address_type === 'shipping')?.line1 || ''}
-                  onChange={(e) => {
-                    const addresses = [...(formData.addresses || [])];
-                    const idx = addresses.findIndex(a => a.address_type === 'shipping');
-                    if (idx !== -1) addresses[idx].line1 = e.target.value;
-                    setFormData({...formData, addresses});
-                  }}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="industrial-label">State</label>
-                  <input 
-                    type="text" 
-                    className="industrial-input" 
-                    value={formData.addresses?.find((a: any) => a.address_type === 'shipping')?.state || ''}
-                    onChange={(e) => {
-                      const addresses = [...(formData.addresses || [])];
-                      const idx = addresses.findIndex(a => a.address_type === 'shipping');
-                      if (idx !== -1) addresses[idx].state = e.target.value;
-                      setFormData({...formData, addresses});
-                    }}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="industrial-label">Pin Code</label>
-                  <input 
-                    type="text" 
-                    className="industrial-input" 
-                    value={formData.addresses?.find((a: any) => a.address_type === 'shipping')?.pincode || ''}
-                    onChange={(e) => {
-                      const addresses = [...(formData.addresses || [])];
-                      const idx = addresses.findIndex(a => a.address_type === 'shipping');
-                      if (idx !== -1) addresses[idx].pincode = e.target.value;
-                      setFormData({...formData, addresses});
-                    }}
-                  />
-                </div>
-              </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Country</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                placeholder="Country name"
+                value={formData.country || ''}
+                onChange={(e) => {
+                  setFormData({...formData, country: e.target.value});
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Pin Code</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                placeholder="Pin code"
+                value={formData.pincode || ''}
+                onChange={(e) => {
+                  setFormData({...formData, pincode: e.target.value});
+                }}
+              />
             </div>
           </div>
         </div>

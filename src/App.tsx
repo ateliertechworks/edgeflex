@@ -124,11 +124,9 @@ function AppContent() {
         <div className="flex-1 flex flex-col relative">
           <main className="flex-1 p-6 sm:p-8 relative">
             <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.05] flex items-center justify-center pointer-events-none -z-10">
-               <img 
-                 src="/home/akilesh/.gemini/antigravity/brain/d2c32260-8187-4146-b043-2e602ca3b11e/edgeflex_logo_bw_1773559884002.png" 
-                 className="w-[80%] max-w-[800px] grayscale" 
-                 alt=""
-               />
+               <div className="w-[80%] max-w-[800px] h-48 bg-gradient-to-r from-black/20 to-black/20 rounded-lg flex items-center justify-center text-black/20 font-bold text-2xl">
+                 Edgeflex Logo
+               </div>
             </div>
             
             <AnimatePresence mode="wait">

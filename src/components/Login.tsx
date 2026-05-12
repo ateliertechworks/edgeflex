@@ -10,7 +10,7 @@ import { Lock, Mail, Loader2, ArrowRight, ShieldCheck, AlertCircle } from 'lucid
 import { useAuth } from '../context/AuthContext';
 
 export const Login: React.FC = () => {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, demoLogin } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -171,6 +171,22 @@ export const Login: React.FC = () => {
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
             Sign in with Google
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => {
+              setLoading(true);
+              setTimeout(() => {
+                demoLogin();
+                setLoading(false);
+              }, 500);
+            }}
+            disabled={loading}
+            className="w-full h-14 bg-black/5 border border-black/10 rounded hover:bg-black/10 transition-all flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-black/60 hover:text-black"
+          >
+            <Loader2 className="w-4 h-4" />
+            Demo Mode (Test Access)
           </button>
         </form>
 
