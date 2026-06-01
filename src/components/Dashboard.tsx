@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   Users, ShoppingCart, TrendingUp, AlertCircle, 
-  ArrowRight, Activity, ShieldCheck, Database
+  ArrowRight, Activity
 } from 'lucide-react';
 import { dbService } from '../services/db_service';
 import { useAuth } from '../context/AuthContext';
@@ -79,15 +79,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       icon: TrendingUp, 
       color: 'bg-black',
       change: 'LIVE',
-      id: 'analytics'
-    },
-    { 
-      label: 'Security Mesh', 
-      value: stats.activePermissions, 
-      icon: ShieldCheck, 
-      color: 'bg-black',
-      change: stats.activePermissions > 0 ? 'PROTECTED' : 'MANUAL',
-      id: 'security'
+      id: 'dashboard'
     },
   ];
 
@@ -97,29 +89,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-black text-black tracking-[0.2em] uppercase">Control Center</h2>
+            <h2 className="text-3xl font-black text-black tracking-[0.2em] uppercase">Dashboard</h2>
             <span className="px-3 py-1 bg-[#66B366] text-white text-[9px] font-black uppercase tracking-widest rounded-full flex items-center gap-2">
               <Activity className="w-3 h-3" />
               Live Pulse
             </span>
           </div>
           <p className="text-black/40 text-[10px] uppercase font-bold tracking-widest leading-relaxed">
-            Welcome back, <span className="text-black">{user?.email?.split('@')[0]}</span>. CRM Mesh is <span className="text-[#66B366]">Operational</span>.
+            Welcome back, <span className="text-black">{user?.email?.split('@')[0]}</span>. System is <span className="text-[#66B366]">Operational</span>.
           </p>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-[9px] font-black text-black/20 uppercase tracking-widest">Protocol Version</p>
-            <p className="text-[10px] font-bold text-black uppercase tracking-wider">v5.1.0-industrial</p>
+            <p className="text-[9px] font-black text-black/20 uppercase tracking-widest">Version</p>
+            <p className="text-[10px] font-bold text-black uppercase tracking-wider">v5.1.0</p>
           </div>
-          <button 
-            onClick={() => onNavigate('import')}
-            className="industrial-btn-secondary flex items-center gap-2"
-          >
-            <Database className="w-4 h-4" />
-            Inject New Data
-          </button>
         </div>
       </div>
 
@@ -204,46 +189,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Quick Access / Admin Controls */}
-        <div className="space-y-8">
-          <div className="industrial-card bg-black p-8 text-white shadow-2xl">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] mb-6">Security Module</h3>
-            <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest leading-relaxed mb-8">
-              Configure cross-account mesh protocols and define administrative access levels.
-            </p>
+        {/* Quick Access */}
+        <div className="space-y-4">
+          <div className="industrial-card bg-white p-8">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] mb-6">Quick Actions</h3>
             <div className="space-y-3">
               <button 
-                onClick={() => onNavigate('security')}
-                className="w-full flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded hover:bg-white/10 transition-all group"
+                onClick={() => onNavigate('customers')}
+                className="w-full flex items-center justify-between p-4 bg-black/5 border border-black/10 rounded hover:bg-black/10 transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-4 h-4 text-[#66B366]" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Mesh Protocol Settings</span>
+                  <Users className="w-4 h-4 text-black" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Manage Customers</span>
                 </div>
-                <ArrowRight className="w-4 h-4 opacity-20 group-hover:opacity-100 transition-opacity" />
+                <ArrowRight className="w-4 h-4 opacity-30 group-hover:opacity-100 transition-opacity" />
               </button>
               <button 
-                onClick={() => onNavigate('customers')}
-                className="w-full flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded hover:bg-white/10 transition-all group"
+                onClick={() => onNavigate('orders')}
+                className="w-full flex items-center justify-between p-4 bg-black/5 border border-black/10 rounded hover:bg-black/10 transition-all group"
               >
                 <div className="flex items-center gap-3">
-                  <Users className="w-4 h-4 text-[#0047FF]" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Expand Customer Mesh</span>
+                  <ShoppingCart className="w-4 h-4 text-black" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">View Orders</span>
                 </div>
-                <ArrowRight className="w-4 h-4 opacity-20 group-hover:opacity-100 transition-opacity" />
+                <ArrowRight className="w-4 h-4 opacity-30 group-hover:opacity-100 transition-opacity" />
               </button>
             </div>
-          </div>
-
-          <div 
-            onClick={() => onNavigate('analytics')}
-            className="industrial-card bg-white p-8 border-dashed border-2 border-black/10 flex flex-col items-center text-center justify-center min-h-[200px] hover:border-[#0047FF] hover:bg-[#0047FF]/[0.01] transition-all cursor-pointer group"
-          >
-            <div className="w-12 h-12 bg-[#0047FF]/5 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <TrendingUp className="w-6 h-6 text-[#0047FF]" />
-            </div>
-            <h4 className="text-[10px] font-black text-black uppercase tracking-[0.2em]">Open Intelligence Center</h4>
-            <p className="text-[9px] text-black/30 mt-2 uppercase font-bold tracking-widest">Analyze Market Penetration</p>
           </div>
         </div>
       </div>

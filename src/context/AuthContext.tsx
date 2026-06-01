@@ -1,96 +1,70 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  onAuthStateChanged, 
-  User,
-  signOut,
-  signInWithPopup
-} from 'firebase/auth';
-import { auth, googleProvider } from '../services/firebase_config';
+
+interface SimpleUser {
+  id: string;
+  email: string;
+  displayName: string;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: SimpleUser | null;
   loading: boolean;
-  logout: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  demoLogin: () => void;
+  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Hardcoded credentials for demo purposes
+const VALID_CREDENTIALS = {
+  email: 'admin@edgeflex.io',
+  password: 'Admin@123'
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SimpleUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user);
-        setLoading(false);
-      });
-
-      // Set a timeout to ensure loading completes even if Firebase fails
-      const timeout = setTimeout(() => {
-        setLoading(false);
-      }, 5000);
-
-      return () => {
-        clearTimeout(timeout);
-        unsubscribe();
-      };
-    } catch (error) {
-      console.error('[Edgeflex] Firebase initialization error:', error);
-      setLoading(false);
+    // Check localStorage for existing session
+    const storedUser = localStorage.getItem('edgeflex_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('[Edgeflex] Failed to restore session:', error);
+        localStorage.removeItem('edgeflex_user');
+      }
     }
+    setLoading(false);
   }, []);
 
-  const logout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      setUser(null);
+  const login = async (email: string, password: string): Promise<void> => {
+    // Simulate login delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password) {
+      const newUser: SimpleUser = {
+        id: 'user-' + Date.now(),
+        email,
+        displayName: 'Edgeflex Admin'
+      };
+      setUser(newUser);
+      localStorage.setItem('edgeflex_user', JSON.stringify(newUser));
+      console.log('[Edgeflex] User logged in:', email);
+    } else {
+      throw new Error('Invalid email or password');
     }
   };
 
-  const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error('Google Sign-In error:', error);
-      throw error;
-    }
-  };
-
-  const demoLogin = () => {
-    // Create a mock user for demo purposes
-    const mockUser = {
-      uid: 'demo-user-12345',
-      email: 'admin@edgeflex.demo',
-      displayName: 'Edgeflex Admin',
-      isAnonymous: false,
-      emailVerified: true,
-      phoneNumber: null,
-      photoURL: null,
-      metadata: {
-        creationTime: new Date().toISOString(),
-        lastSignInTime: new Date().toISOString()
-      },
-      providerData: [],
-      getIdToken: async () => 'demo-token',
-      getIdTokenResult: async () => ({ token: 'demo-token', claims: {}, issuedAtTime: new Date().toISOString(), expirationTime: new Date().toISOString(), signInProvider: null }),
-      reload: async () => {},
-      getDisplayName: () => 'Edgeflex Admin',
-      toJSON: () => ({})
-    } as any;
-    
-    setUser(mockUser);
-    localStorage.setItem('edgeflex_demo_mode', 'true');
-    console.log('[Edgeflex] Demo mode activated - logged in as:', mockUser.email);
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('edgeflex_user');
+    console.log('[Edgeflex] User logged out');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, signInWithGoogle, demoLogin }}>
+    <AuthContext.Provider value={{ user, loading, logout, login }}>
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -1,14 +1,14 @@
 import * as React from 'react';
 import {
-  Users, ShoppingCart, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Building2, Upload, LogOut, LayoutDashboard, ShieldCheck
+  Users, ShoppingCart, Settings,
+  ChevronLeft, ChevronRight, Building2, LogOut, LayoutDashboard
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'customers' | 'orders' | 'analytics' | 'import' | 'security';
-  setActiveTab: (tab: 'dashboard' | 'customers' | 'orders' | 'analytics' | 'import' | 'security') => void;
+  activeTab: 'dashboard' | 'customers' | 'orders';
+  setActiveTab: (tab: 'dashboard' | 'customers' | 'orders') => void;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
 }
@@ -19,12 +19,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuth();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Control Center', icon: LayoutDashboard },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
-    { id: 'analytics', label: 'Intelligence', icon: BarChart3 },
-    { id: 'import', label: 'Data Injection', icon: Upload },
-    { id: 'security', label: 'Security Module', icon: ShieldCheck },
   ];
 
   return (

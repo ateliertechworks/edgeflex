@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ArrowLeft, ShoppingCart, Building2, Package, CreditCard, Truck, FileText, Loader2
+  ArrowLeft, ShoppingCart, Package, CreditCard, Truck, FileText, Loader2
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { dbService } from '../services/db_service';
@@ -19,11 +19,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
   const [formData, setFormData] = useState<any>({
     order_number: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
     order_date: new Date().toISOString().split('T')[0],
+    po_number: '',
+    project: '',
+    state: '',
+    pincode: '',
+    contact_person: '',
+    mobile: '',
+    delivery_terms: '',
+    payment_terms: '',
+    credit_delivery_date: '',
+    payment_duration_days: 0,
+    branch_code: '',
     year: new Date().getFullYear(),
-    sales_person: '',
     status: 'Pending',
     customer_id: 0,
-    branch_id: 0,
     product_type: 'MEJ',
     product_code: '',
     size: '',
@@ -59,15 +68,66 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
     try {
       const data = await dbService.getCustomer(customerId);
       setSelectedCustomer(data);
-      setFormData(prev => ({ 
+      const firstContact = data?.contacts?.[0];
+      setFormData((prev: any) => ({ 
         ...prev, 
         customer_id: customerId,
-        branch_id: data?.branches?.[0]?.id || 0
+        state: data?.state || '',
+        pincode: data?.pincode || '',
+        contact_person: firstContact?.name || '',
+        mobile: firstContact?.phone1 || '',
+        branch_code: data?.branch_code || '',
+        delivery_terms: 'Ex Works',
+        payment_terms: 'Advance'
       }));
     } catch (error) {
       console.error('Failed to load customer details', error);
     }
   };
+
+  // Generate a default order number in the format YYNNN (e.g. 26001)
+  useEffect(() => {
+    const generateDefaultOrderNumber = async () => {
+      try {
+        const orders = await dbService.getOrders();
+        const year = new Date().getFullYear().toString().slice(-2);
+        let maxSeq = 0;
+
+        orders.forEach((o: any) => {
+          if (!o?.order_number) return;
+          // try to find sequence after the year (e.g., '26' followed by digits)
+          const match = o.order_number.match(new RegExp(`${year}(\\d{3,})`));
+          if (match) {
+            const seq = parseInt(match[1], 10);
+            if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+            return;
+          }
+          // fallback: take trailing 3+ digits
+          const trailing = o.order_number.match(/(\\d{3,})$/);
+          if (trailing) {
+            const seq = parseInt(trailing[1], 10);
+            if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+          }
+        });
+
+        const next = maxSeq + 1;
+        const generated = `${year}${String(next).padStart(3, '0')}`;
+
+        // Only overwrite if current value looks like a placeholder/random id
+        setFormData((prev: any) => {
+          const cur = String(prev.order_number || '');
+          if (cur.startsWith('ORD-') || cur.trim() === '') {
+            return { ...prev, order_number: generated };
+          }
+          return prev;
+        });
+      } catch (err) {
+        console.warn('Failed to auto-generate order number', err);
+      }
+    };
+
+    generateDefaultOrderNumber();
+  }, []);
 
   // Calculations
   useEffect(() => {
@@ -81,7 +141,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
     const taxAmount = totalPrice * (taxPct / 100);
     const finalAmount = totalPrice + taxAmount;
 
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       unit_price_inr: unitPriceInr,
       total_price: totalPrice,
@@ -96,7 +156,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
     try {
       // Logic for adding/updating order in dbService
       const result = await dbService.addOrder(formData);
-      console.log(`[Edgeflex] Order created: ${result.order_number}`);
+      console.log(`[Edgeflex] Order created: ${formData.order_number}`);
       onSuccess(result.id);
     } catch (error) {
       console.error('Failed to save order', error);
@@ -122,50 +182,25 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 1. Order Information */}
+        {/* 1. Order & Customer Information (Combined) */}
         <div className="industrial-card p-6 space-y-6">
           <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
             <ShoppingCart className="w-4 h-4 text-[#1A1A1A]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Order Information</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider">Order & Customer Details</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          
+          {/* Top Row: Order Reference & Customer */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
-              <label className="industrial-label">Order Number</label>
-              <input readOnly type="text" className="industrial-input bg-gray-50 font-bold" value={formData.order_number} />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Order Date</label>
-              <input 
-                type="date" 
-                className="industrial-input" 
-                value={formData.order_date}
-                onChange={(e) => setFormData({...formData, order_date: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Financial Year</label>
-              <input readOnly type="text" className="industrial-input bg-gray-50" value={formData.year} />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Sales Person</label>
+              <label className="industrial-label">Order Number (Our Ref)</label>
               <input 
                 type="text" 
-                className="industrial-input" 
-                placeholder="Name"
-                value={formData.sales_person}
-                onChange={(e) => setFormData({...formData, sales_person: e.target.value})}
+                className="industrial-input font-bold"
+                value={formData.order_number}
+                onChange={(e) => setFormData({...formData, order_number: e.target.value})}
               />
+              <div className="text-[10px] text-[#999999] mt-1">Default: YY + sequence (e.g. 26001). Editable.</div>
             </div>
-          </div>
-        </div>
-
-        {/* 2. Customer Information */}
-        <div className="industrial-card p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-            <Building2 className="w-4 h-4 text-[#1A1A1A]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Customer Information</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="industrial-label">Select Customer</label>
               <select 
@@ -178,25 +213,147 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
                 {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+          </div>
+
+          {/* Second Row: PO Details */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-1">
-              <label className="industrial-label">Select Branch</label>
+              <label className="industrial-label">PO Number</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                placeholder="Enter PO Number"
+                value={formData.po_number || ''}
+                onChange={(e) => setFormData({...formData, po_number: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">PO Date</label>
+              <input 
+                type="date" 
+                className="industrial-input" 
+                value={formData.order_date}
+                onChange={(e) => setFormData({...formData, order_date: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Project</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                placeholder="Project name"
+                value={formData.project || ''}
+                onChange={(e) => setFormData({...formData, project: e.target.value})}
+              />
+            </div>
+          </div>
+
+          {/* Third Row: Location & Contact Details */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <label className="industrial-label">State</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                value={formData.state || ''}
+                onChange={(e) => setFormData({...formData, state: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Pincode</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                value={formData.pincode || ''}
+                onChange={(e) => setFormData({...formData, pincode: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Contact Person</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                value={formData.contact_person || ''}
+                onChange={(e) => setFormData({...formData, contact_person: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Mobile</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                value={formData.mobile || ''}
+                onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+              />
+            </div>
+          </div>
+
+          {/* Fourth Row: Delivery & Payment Terms */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="industrial-label">Delivery Terms</label>
               <select 
-                required
                 className="industrial-input"
-                value={formData.branch_id}
-                onChange={(e) => setFormData({...formData, branch_id: Number(e.target.value)})}
+                value={formData.delivery_terms || ''}
+                onChange={(e) => setFormData({...formData, delivery_terms: e.target.value})}
               >
-                <option value="">Select a branch...</option>
-                {selectedCustomer?.branches?.map(b => <option key={b.id} value={b.id}>{b.name} ({b.location})</option>)}
+                <option value="">Select Delivery Terms</option>
+                <option value="Ex Works">Ex Works</option>
+                <option value="FOB">FOB (Free on Board)</option>
+                <option value="CIF">CIF (Cost, Insurance and Freight)</option>
+                <option value="DDP">DDP (Delivered Duty Paid)</option>
+                <option value="DAP">DAP (Delivered at Place)</option>
               </select>
             </div>
             <div className="space-y-1">
-              <label className="industrial-label">Industry (Auto)</label>
-              <input readOnly type="text" className="industrial-input bg-gray-50" value={selectedCustomer?.industry_type || ''} />
+              <label className="industrial-label">Payment Terms</label>
+              <select 
+                required
+                className="industrial-input"
+                value={formData.payment_terms || ''}
+                onChange={(e) => setFormData({...formData, payment_terms: e.target.value, credit_due_date: '', payment_duration_days: 0})}
+              >
+                <option value="">Select Payment Terms</option>
+                <option value="Advance">Advance</option>
+                <option value="Credit">Credit</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Conditional Row: Credit Payment Details */}
+          {formData.payment_terms === 'Credit' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50 rounded border border-blue-200">
+              <div className="space-y-1">
+                <label className="industrial-label">Delivery Date</label>
+                <input 
+                  type="date" 
+                  className="industrial-input" 
+                  value={formData.credit_delivery_date || ''}
+                  onChange={(e) => setFormData({...formData, credit_delivery_date: e.target.value})}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="industrial-label">Payment Duration (Days)</label>
+                <input 
+                  type="number" 
+                  className="industrial-input" 
+                  placeholder="e.g., 30, 60, 90"
+                  value={formData.payment_duration_days || ''}
+                  onChange={(e) => setFormData({...formData, payment_duration_days: Number(e.target.value)})}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Fifth Row: Branch Code & Industry Type (Auto-populate) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-[#F0F0F0]">
+            <div className="space-y-1">
+              <label className="industrial-label">Branch Code (Auto)</label>
+              <input readOnly type="text" className="industrial-input bg-gray-50 font-bold" value={formData.branch_code || '-'} />
             </div>
             <div className="space-y-1">
-              <label className="industrial-label">Location (Auto)</label>
-              <input readOnly type="text" className="industrial-input bg-gray-50" value={selectedCustomer?.branches?.find(b => b.id === formData.branch_id)?.location || ''} />
+              <label className="industrial-label">Industry Type (Auto)</label>
+              <input readOnly type="text" className="industrial-input bg-gray-50" value={selectedCustomer?.industry_type || '-'} />
             </div>
           </div>
         </div>

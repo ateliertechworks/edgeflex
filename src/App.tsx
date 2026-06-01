@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Building2, Loader2, BarChart3
-} from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Login } from './components/Login';
@@ -15,20 +12,13 @@ import { CustomerProfile } from './components/CustomerProfile';
 import { OrderPortal } from './components/OrderPortal';
 import { OrderForm } from './components/OrderForm';
 import { OrderProfile } from './components/OrderProfile';
-import { Analytics } from './components/Analytics';
-import { ImportData } from './components/ImportData';
 
 import { Dashboard } from './components/Dashboard';
 
 type ViewState = 
   | { type: 'dashboard' }
   | { type: 'customers'; sub: 'list' | 'add' | 'profile' | 'edit'; id?: number }
-  | { type: 'orders'; sub: 'list' | 'add' | 'profile'; id?: number }
-  | { type: 'analytics' }
-  | { type: 'import' }
-  | { type: 'security' };
-
-import { SecuritySettings } from './components/SecuritySettings';
+  | { type: 'orders'; sub: 'list' | 'add' | 'profile'; id?: number };
 
 const MainApp: React.FC = () => {
   const { user } = useAuth();
@@ -55,7 +45,7 @@ export default function App() {
 function AppContent() {
   const [collapsed, setCollapsed] = useState(false);
   const [view, setView] = useState<ViewState>({ type: 'dashboard' });
-  const [activeTab, setActiveTab] = useState('Intelligence');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
     console.log("[Edgeflex] Running in Client-Side Prototype Mode (Netlify Ready)");
@@ -82,15 +72,6 @@ function AppContent() {
         if (view.sub === 'add') return <OrderForm onBack={() => setView({ type: 'orders', sub: 'list' })} onSuccess={(id) => setView({ type: 'orders', sub: 'profile', id })} />;
         if (view.sub === 'profile') return <OrderProfile orderId={view.id!} onBack={() => setView({ type: 'orders', sub: 'list' })} />;
         return <OrderPortal onAddOrder={() => setView({ type: 'orders', sub: 'add' })} onViewOrder={(id) => setView({ type: 'orders', sub: 'profile', id })} />;
-
-      case 'analytics':
-        return <Analytics />;
-
-      case 'import':
-        return <ImportData />;
-
-      case 'security':
-        return <SecuritySettings />;
     }
   };
 
@@ -104,22 +85,6 @@ function AppContent() {
       />
 
       <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
-        {/* Header */}
-        <header className="h-14 border-b border-[#E5E5E5] bg-white/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-black rounded-full animate-pulse" />
-            <h1 className="text-[10px] font-black uppercase tracking-[0.3em] text-black/60">
-              Edgeflex Status: <span className="text-black">Operational</span>
-            </h1>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col items-end">
-              <p className="text-[10px] font-black text-black">ADMIN_SESSION_01</p>
-              <p className="text-[8px] font-bold text-black/40 tracking-widest">v4.0.2-industrial</p>
-            </div>
-          </div>
-        </header>
-
         {/* Dynamic Content Area */}
         <div className="flex-1 flex flex-col relative">
           <main className="flex-1 p-6 sm:p-8 relative">

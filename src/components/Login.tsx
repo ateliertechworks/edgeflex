@@ -1,45 +1,21 @@
 import React, { useState } from 'react';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail
-} from 'firebase/auth';
-import { auth } from '../services/firebase_config';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, Mail, Loader2, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Login: React.FC = () => {
-  const { signInWithGoogle, demoLogin } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resetSent, setResetSent] = useState(false);
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await signInWithGoogle();
-    } catch (err: any) {
-      setError(err.message || 'Google authentication failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
-      if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        await createUserWithEmailAndPassword(auth, email, password);
-      }
+      await login(email, password);
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {
@@ -47,22 +23,18 @@ export const Login: React.FC = () => {
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!email) {
-      setError('Please enter your email first');
-      return;
-    }
+  const handleDemoLogin = async () => {
     setLoading(true);
+    setError(null);
     try {
-      await sendPasswordResetEmail(auth, email);
-      setResetSent(true);
-      setError(null);
+      await login('admin@edgeflex.io', 'Admin@123');
     } catch (err: any) {
-      setError(err.message || 'Reset failed');
+      setError(err.message || 'Demo login failed');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-6 relative overflow-hidden">
@@ -88,7 +60,7 @@ export const Login: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-black/40 uppercase tracking-widest px-1">Access Identity (Email)</label>
+            <label className="text-[10px] font-black text-black/40 uppercase tracking-widest px-1">Email</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
               <input 
@@ -103,7 +75,7 @@ export const Login: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-black/40 uppercase tracking-widest px-1">Security Key (Password)</label>
+            <label className="text-[10px] font-black text-black/40 uppercase tracking-widest px-1">Password</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
               <input 
@@ -129,17 +101,6 @@ export const Login: React.FC = () => {
                 <p className="text-[10px] uppercase font-bold tracking-wider">{error}</p>
               </motion.div>
             )}
-            {resetSent && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex items-center gap-2 text-black bg-black/5 p-4 rounded border border-black/10 overflow-hidden"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <p className="text-[10px] uppercase font-bold tracking-wider">Reset sequence initiated. Check your inbox.</p>
-              </motion.div>
-            )}
           </AnimatePresence>
 
           <button 
@@ -151,62 +112,14 @@ export const Login: React.FC = () => {
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <>
-                {isLogin ? 'INITIALIZE SESSION' : 'REGISTER ENTITY'}
+                LOGIN
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>
 
-          <div className="relative py-4 flex items-center">
-            <div className="flex-grow border-t border-black/5"></div>
-            <span className="flex-shrink mx-4 text-[8px] font-black text-black/20 uppercase tracking-[0.3em]">Secure Gateway</span>
-            <div className="flex-grow border-t border-black/5"></div>
-          </div>
-
-          <button 
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full h-14 border border-black/10 rounded hover:bg-black/5 transition-all flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-            Sign in with Google
-          </button>
-
-          <button 
-            type="button"
-            onClick={() => {
-              setLoading(true);
-              setTimeout(() => {
-                demoLogin();
-                setLoading(false);
-              }, 500);
-            }}
-            disabled={loading}
-            className="w-full h-14 bg-black/5 border border-black/10 rounded hover:bg-black/10 transition-all flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-black/60 hover:text-black"
-          >
-            <Loader2 className="w-4 h-4" />
-            Demo Mode (Test Access)
-          </button>
+          {/* demo login removed */}
         </form>
-
-        <div className="mt-8 flex flex-col gap-4 text-center">
-          <button 
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-[10px] font-black text-black/30 uppercase tracking-[0.2em] hover:text-black transition-colors"
-          >
-            {isLogin ? "Transition to Registration" : "Return to Session Initialization"}
-          </button>
-          
-          {isLogin && (
-            <button 
-              onClick={handleResetPassword}
-              className="text-[9px] font-bold text-black/20 uppercase tracking-widest hover:text-black/60 transition-colors"
-            >
-              Recover Access Credentials?
-            </button>
-          )}
-        </div>
       </motion.div>
     </div>
   );

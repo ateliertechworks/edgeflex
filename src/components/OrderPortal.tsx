@@ -162,6 +162,7 @@ export const OrderPortal: React.FC<OrderPortalProps> = ({ onAddOrder, onViewOrde
               <tr className="bg-[#F9F9F9] border-b border-[#E5E5E5]">
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Order Details</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Customer</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Branch Code</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Product</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Amount</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Status</th>
@@ -171,13 +172,13 @@ export const OrderPortal: React.FC<OrderPortalProps> = ({ onAddOrder, onViewOrde
             <tbody className="divide-y divide-[#E5E5E5]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center">
+                  <td colSpan={7} className="px-4 py-8 text-center">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#999999]" />
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[#666666] text-sm italic">
+                  <td colSpan={7} className="px-4 py-8 text-center text-[#666666] text-sm italic">
                     No orders found.
                   </td>
                 </tr>
@@ -197,6 +198,9 @@ export const OrderPortal: React.FC<OrderPortalProps> = ({ onAddOrder, onViewOrde
                     <td className="px-4 py-4">
                       <div className="text-sm font-medium">{o.customer?.name}</div>
                       <div className="text-[10px] text-[#999999] uppercase">{o.invoice_no || 'No Invoice'}</div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm font-bold text-[#0047FF]">{o.branch_code || 'N/A'}</div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">{o.product_type}</div>

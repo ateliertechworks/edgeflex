@@ -81,6 +81,8 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onAddCustomer, o
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Customer Name</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Type</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Industry</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Location</th>
+                <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Contact</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">GST Number</th>
                 <th className="px-4 py-3 text-[11px] font-bold text-[#666666] uppercase tracking-wider">Actions</th>
               </tr>
@@ -115,6 +117,11 @@ export const CustomerPortal: React.FC<CustomerPortalProps> = ({ onAddCustomer, o
                       </span>
                     </td>
                     <td className="px-4 py-4 text-sm text-[#444444]">{c.industry_type}</td>
+                    <td className="px-4 py-4 text-sm text-[#666666]">{c.state || 'N/A'} - {c.pincode || 'N/A'}</td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm text-[#444444]">{c.contacts?.[0]?.name || 'N/A'}</div>
+                      <div className="text-[10px] text-[#999999]">{c.contacts?.[0]?.phone1 || 'N/A'}</div>
+                    </td>
                     <td className="px-4 py-4 font-mono text-xs text-[#666666]">{c.gst_number || 'N/A'}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">

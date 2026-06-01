@@ -15,6 +15,8 @@ interface CustomerFormProps {
 export const CustomerForm: React.FC<CustomerFormProps> = ({ onBack, onSuccess, editId }) => {
   const [formData, setFormData] = useState<any>({
     name: '',
+    branch_code: '',
+    alias: '',
     type: 'Dealer',
     gst_number: '',
     industry_type: 'Power',
@@ -25,6 +27,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onBack, onSuccess, e
     country: 'India',
     pincode: ''
   });
+
+  const generateAlias = (name: string, branchCode: string) => {
+    return branchCode ? `${name} (${branchCode})` : name;
+  };
 
   const [loading, setLoading] = useState(false);
 
@@ -97,15 +103,40 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ onBack, onSuccess, e
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
-              <label className="industrial-label">Customer Name</label>
+              <label className="industrial-label">Customer Name (Formal Name)</label>
               <input 
                 required
                 type="text" 
                 className="industrial-input" 
-                placeholder="e.g. ABC Industries Pvt Ltd"
+                placeholder="e.g. The Ramco Cements Limited"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
               />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Branch Code</label>
+              <input 
+                type="text" 
+                className="industrial-input" 
+                placeholder="e.g. JPM"
+                value={formData.branch_code}
+                onChange={(e) => setFormData({...formData, branch_code: e.target.value})}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="industrial-label">Alias (Formal Name)</label>
+              <div className="space-y-2">
+                <input 
+                  type="text" 
+                  className="industrial-input bg-[#F9F9F9]" 
+                  placeholder="Auto-generated from Name and Branch Code"
+                  value={formData.alias}
+                  onChange={(e) => setFormData({...formData, alias: e.target.value})}
+                />
+                <div className="text-[10px] text-[#999999]">
+                  Preview: {generateAlias(formData.name, formData.branch_code) || 'Enter name and branch code'}
+                </div>
+              </div>
             </div>
             <div className="space-y-1">
               <label className="industrial-label">GST Number</label>

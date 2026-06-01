@@ -80,9 +80,12 @@ export const Analytics: React.FC = () => {
         dbService.getOrders()
       ]);
       
+      const completedCount = allOrders.filter((o: any) => o.status === 'Completed').length;
+      const pendingCount = allOrders.length - completedCount;
+      
       const stData = [
-        { name: 'Pending', value: sData.pendingOrders }, 
-        { name: 'Completed', value: sData.totalOrders - sData.pendingOrders }
+        { name: 'Pending', value: pendingCount }, 
+        { name: 'Completed', value: completedCount }
       ];
 
       // Calculate Product Distribution

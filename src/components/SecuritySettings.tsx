@@ -5,8 +5,8 @@ import { ShieldCheck, UserPlus, Trash2, Mail, Loader2, Share2, Info } from 'luci
 import { dbService } from '../services/db_service';
 
 export const SecuritySettings: React.FC = () => {
-  const [permissions, setPermissions] = useState<{ myShares: any[], sharesToMe: any[] }>({
-    myShares: [],
+  const [permissions, setPermissions] = useState<{ sharesByMe: any[], sharesToMe: any[] }>({
+    sharesByMe: [],
     sharesToMe: []
   });
   const [email, setEmail] = useState('');
@@ -123,7 +123,7 @@ export const SecuritySettings: React.FC = () => {
               <h3 className="text-sm font-bold uppercase tracking-wider">Active Shares</h3>
             </div>
             <span className="text-[10px] font-bold bg-[#F0F0F0] px-2 py-0.5 rounded text-[#666666]">
-              {permissions.myShares.length} GRANTED
+              {permissions.sharesByMe.length} GRANTED
             </span>
           </div>
 
@@ -132,7 +132,7 @@ export const SecuritySettings: React.FC = () => {
               <Loader2 className="w-8 h-8 animate-spin" />
               <span className="text-[10px] font-bold uppercase tracking-widest">Loading permissions...</span>
             </div>
-          ) : permissions.myShares.length === 0 ? (
+          ) : permissions.sharesByMe.length === 0 ? (
             <div className="py-12 text-center space-y-2">
               <Share2 className="w-8 h-8 text-[#E5E5E5] mx-auto" />
               <p className="text-[11px] font-bold text-[#999999] uppercase tracking-wider">No active shares</p>
@@ -140,7 +140,7 @@ export const SecuritySettings: React.FC = () => {
           ) : (
             <div className="space-y-3">
               <AnimatePresence>
-                {permissions.myShares.map((p) => (
+                {permissions.sharesByMe.map((p) => (
                   <motion.div
                     key={p.id}
                     initial={{ opacity: 0, y: 10 }}
