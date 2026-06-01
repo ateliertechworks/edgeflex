@@ -23,4 +23,14 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   }
+    ,
+    "include": [
+      "src/**/*"
+    ],
+    "exclude": [
+      "server",
+      "prisma",
+      "node_modules",
+      "dist"
+    ]
 }
