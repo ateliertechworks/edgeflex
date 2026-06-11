@@ -1,20 +1,57 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Edgeflex CRM
 
-# Run and deploy your AI Studio app
+Industrial-grade Customer Relationship Management system featuring comprehensive customer, branch, and contact management.
 
-This contains everything you need to run your app locally.
+**Version:** 1.0.0  
+**Last Updated:** June 11, 2026
 
-View your app in AI Studio: https://ai.studio/apps/f2e3c216-e908-40f1-94d1-cd1f3998f10a
+## Features
 
-## Run Locally
+- 🔐 Multi-user authentication with permission-based access control
+- 👥 Comprehensive customer and branch management
+- 📋 Order tracking and management
+- 📊 Advanced analytics and reporting
+- 📁 Bulk data import from Excel
+- 💾 Secure local database with Prisma
 
-**Prerequisites:**  Node.js
+## Quick Start
 
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Installation
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install
+   ```
+
+2. Set up environment variables by copying `.env.example` to `.env` and updating values:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run TypeScript type checking
+
+## Project Structure
+
+```
+├── src/                 # React components and frontend code
+├── server/              # Backend server configuration
+├── prisma/              # Database schema and migrations
+├── public/              # Static assets
+└── dist/                # Production build output
+```

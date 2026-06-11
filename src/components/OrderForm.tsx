@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ArrowLeft, ShoppingCart, Package, CreditCard, Truck, FileText, Loader2
+  ArrowLeft, ShoppingCart, Package, CreditCard, Truck, FileText, Loader2, PlusCircle, Trash2
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { dbService } from '../services/db_service';
@@ -27,7 +27,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
     mobile: '',
     delivery_terms: '',
     payment_terms: '',
-    credit_delivery_date: '',
     payment_duration_days: 0,
     branch_code: '',
     year: new Date().getFullYear(),
@@ -35,15 +34,27 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
     customer_id: 0,
     product_type: 'MEJ',
     product_code: '',
-    size: '',
-    hsn_code: '',
-    quantity: 1,
+    // product items (multiple products per order)
+    items: [
+      {
+        product_type: 'MEJ',
+        product_code: '',
+        size_a: '',
+        size_b: '',
+        quantity: 1,
+        hsn_code: '',
+        description: '',
+        unit_price: 0,
+        unit_currency: 'INR',
+        currency_conv: 1,
+        delivery_date: ''
+      }
+    ],
     currency: 'INR',
     unit_price: 0,
     conversion_rate: 1,
     unit_price_inr: 0,
     total_price: 0,
-    delivery_date: '',
     invoice_number: '',
     invoice_date: '',
     tax_percent: 18,
@@ -129,15 +140,59 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
     generateDefaultOrderNumber();
   }, []);
 
-  // Calculations
+  // Item helpers: add/remove/update
+  const addItem = () => {
+    setFormData((prev: any) => ({
+      ...prev,
+      items: [
+        ...prev.items,
+        {
+          product_type: 'MEJ',
+          product_code: '',
+          size_a: '',
+          size_b: '',
+          quantity: 1,
+          hsn_code: '',
+          description: '',
+          unit_price: 0,
+          unit_currency: prev.currency || 'INR',
+          currency_conv: prev.conversion_rate || 1,
+          delivery_date: ''
+        }
+      ]
+    }));
+  };
+
+  const updateItem = (index: number, key: string, value: any) => {
+    setFormData((prev: any) => {
+      const items = [...prev.items];
+      items[index] = { ...items[index], [key]: value };
+      return { ...prev, items };
+    });
+  };
+
+  const removeItem = (index: number) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      items: (prev.items || []).filter((_: any, i: number) => i !== index)
+    }));
+  };
+
+  // Calculations (aggregate over items using item.unit_price and per-item conversion)
   useEffect(() => {
-    const unitPrice = Number(formData.unit_price) || 0;
-    const convRate = Number(formData.conversion_rate) || 1;
-    const qty = Number(formData.quantity) || 0;
     const taxPct = Number(formData.tax_percent) || 0;
 
-    const unitPriceInr = unitPrice * convRate;
-    const totalPrice = unitPriceInr * qty;
+    const totalPrice = (formData.items || []).reduce((sum: number, it: any) => {
+      const price = Number(it.unit_price || formData.unit_price || 0);
+      const qty = Number(it.quantity || 0);
+      const conv = Number(it.currency_conv || formData.conversion_rate || 1);
+      const priceInr = price * conv;
+      return sum + (priceInr * qty);
+    }, 0);
+
+    const firstItemPrice = (formData.items && Number(formData.items[0]?.unit_price)) || Number(formData.unit_price) || 0;
+    const firstItemConv = (formData.items && Number(formData.items[0]?.currency_conv)) || Number(formData.conversion_rate) || 1;
+    const unitPriceInr = firstItemPrice * firstItemConv;
     const taxAmount = totalPrice * (taxPct / 100);
     const finalAmount = totalPrice + taxAmount;
 
@@ -148,7 +203,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
       tax_amount: taxAmount,
       final_amount: finalAmount
     }));
-  }, [formData.unit_price, formData.conversion_rate, formData.quantity, formData.tax_percent]);
+  }, [formData.conversion_rate, formData.tax_percent, JSON.stringify(formData.items), formData.unit_price]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +220,21 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
       setLoading(false);
     }
   };
+
+  const summaryTotals = (formData.items || []).reduce(
+    (acc: any, it: any) => {
+      const unit = Number(it.unit_price || 0);
+      const qty = Number(it.quantity || 0);
+      const conv = Number(it.currency_conv || formData.conversion_rate || 1);
+      const totalCurrency = unit * qty;
+      const totalInr = unit * conv * qty;
+      acc.totalQty += qty;
+      acc.totalCurrency += totalCurrency;
+      acc.totalInr += totalInr;
+      return acc;
+    },
+    { totalQty: 0, totalCurrency: 0, totalInr: 0 }
+  );
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
@@ -322,16 +392,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
 
           {/* Conditional Row: Credit Payment Details */}
           {formData.payment_terms === 'Credit' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-blue-50 rounded border border-blue-200">
-              <div className="space-y-1">
-                <label className="industrial-label">Delivery Date</label>
-                <input 
-                  type="date" 
-                  className="industrial-input" 
-                  value={formData.credit_delivery_date || ''}
-                  onChange={(e) => setFormData({...formData, credit_delivery_date: e.target.value})}
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 p-4 bg-blue-50 rounded border border-blue-200">
               <div className="space-y-1">
                 <label className="industrial-label">Payment Duration (Days)</label>
                 <input 
@@ -358,198 +419,160 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onBack, onSuccess }) => {
           </div>
         </div>
 
-        {/* 3. Product Information */}
+        {/* 3. Product Information (multiple items) */}
         <div className="industrial-card p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-            <Package className="w-4 h-4 text-[#1A1A1A]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Product Information</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="space-y-1">
-              <label className="industrial-label">Product Type</label>
-              <select 
-                className="industrial-input"
-                value={formData.product_type}
-                onChange={(e) => setFormData({...formData, product_type: e.target.value})}
-              >
-                <option>MEJ</option>
-                <option>RMEJ</option>
-                <option>FEJ</option>
-                <option>NMEJ</option>
-                <option>Damper</option>
-                <option>P&F</option>
-                <option>Others</option>
-              </select>
+          <div className="flex items-center justify-between gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4 text-[#1A1A1A]" />
+              <h3 className="text-sm font-bold uppercase tracking-wider">Product Information</h3>
             </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Product Code</label>
-              <input 
-                type="text" 
-                className="industrial-input" 
-                value={formData.product_code}
-                onChange={(e) => setFormData({...formData, product_code: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Size</label>
-              <input 
-                type="text" 
-                className="industrial-input" 
-                placeholder='e.g. 10"'
-                value={formData.size}
-                onChange={(e) => setFormData({...formData, size: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">HSN Code</label>
-              <input 
-                type="text" 
-                className="industrial-input" 
-                value={formData.hsn_code}
-                onChange={(e) => setFormData({...formData, hsn_code: e.target.value})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Quantity</label>
-              <input 
-                type="number" 
-                className="industrial-input" 
-                value={formData.quantity}
-                onChange={(e) => setFormData({...formData, quantity: Number(e.target.value)})}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 4. Price & Currency */}
-        <div className="industrial-card p-6 space-y-6">
-          <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-            <CreditCard className="w-4 h-4 text-[#1A1A1A]" />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Price & Currency</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="space-y-1">
-              <label className="industrial-label">Currency</label>
-              <select 
-                className="industrial-input"
-                value={formData.currency}
-                onChange={(e) => setFormData({...formData, currency: e.target.value as any})}
-              >
+            <div className="flex items-center gap-3">
+              <select className="industrial-input w-36" value={formData.currency} onChange={(e) => {
+                const cur = e.target.value;
+                setFormData((prev: any) => ({
+                  ...prev,
+                  currency: cur,
+                  items: (prev.items || []).map((it: any) => ({ ...it, unit_currency: cur }))
+                }));
+              }}>
                 <option>INR</option>
                 <option>USD</option>
                 <option>EUR</option>
               </select>
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Unit Price</label>
-              <input 
-                type="number" 
-                className="industrial-input" 
-                value={formData.unit_price}
-                onChange={(e) => setFormData({...formData, unit_price: Number(e.target.value)})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Conversion Rate</label>
-              <input 
-                type="number" 
-                step="0.01"
-                className="industrial-input" 
-                value={formData.conversion_rate}
-                onChange={(e) => setFormData({...formData, conversion_rate: Number(e.target.value)})}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Unit Price (INR)</label>
-              <input readOnly type="text" className="industrial-input bg-gray-50 font-semibold" value={formData.unit_price_inr?.toFixed(2)} />
-            </div>
-            <div className="space-y-1">
-              <label className="industrial-label">Total Price (INR)</label>
-              <input readOnly type="text" className="industrial-input bg-gray-50 font-bold" value={formData.total_price?.toFixed(2)} />
-            </div>
-          </div>
-        </div>
-
-        {/* 5. Delivery & Invoice */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="industrial-card p-6 space-y-6">
-            <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-              <Truck className="w-4 h-4 text-[#1A1A1A]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider">Delivery Details</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="industrial-label">Expected Delivery Date</label>
-                <input 
-                  type="date" 
-                  className="industrial-input" 
-                  value={formData.delivery_date}
-                  onChange={(e) => setFormData({...formData, delivery_date: e.target.value})}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="industrial-label">Order Status</label>
-                <select 
-                  className="industrial-input"
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as any})}
-                >
-                  <option>Pending</option>
-                  <option>Confirmed</option>
-                  <option>Shipped</option>
-                  <option>Delivered</option>
-                  <option>Cancelled</option>
-                </select>
-              </div>
+              <button type="button" onClick={addItem} className="flex items-center gap-2 text-sm font-black text-indigo-600">
+                <PlusCircle className="w-5 h-5" /> Add Product
+              </button>
             </div>
           </div>
 
-          <div className="industrial-card p-6 space-y-6">
-            <div className="flex items-center gap-2 border-b border-[#F0F0F0] pb-3 mb-6">
-              <FileText className="w-4 h-4 text-[#1A1A1A]" />
-              <h3 className="text-sm font-bold uppercase tracking-wider">Invoice Details</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="industrial-label">Invoice Number</label>
-                <input 
-                  type="text" 
-                  className="industrial-input" 
-                  value={formData.invoice_number}
-                  onChange={(e) => setFormData({...formData, invoice_number: e.target.value})}
-                />
+          <div className="space-y-4">
+            {(formData.items || []).map((item: any, idx: number) => (
+              <div key={idx} className="p-4 border rounded bg-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm font-bold">Product {idx + 1} — Item: {formData.order_number}-{idx + 1}</div>
+                  <div className="flex items-center gap-2">
+                    { (formData.items || []).length > 1 && (
+                      <button type="button" onClick={() => removeItem(idx)} className="text-red-600">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">Item No</label>
+                    <input readOnly type="text" className="industrial-input bg-gray-50" value={`${formData.order_number}-${idx + 1}`} />
+                  </div>
+
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">Product Type</label>
+                    <select className="industrial-input" value={item.product_type} onChange={(e) => updateItem(idx, 'product_type', e.target.value)}>
+                      <option>MEJ</option>
+                      <option>RMEJ</option>
+                      <option>FEJ</option>
+                      <option>NMEJ</option>
+                      <option>Damper</option>
+                      <option>P&F</option>
+                      <option>Others</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">Size A</label>
+                    <input type="text" className="industrial-input" value={item.size_a} onChange={(e) => updateItem(idx, 'size_a', e.target.value)} placeholder='e.g. 1000' />
+                  </div>
+
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">Size B</label>
+                    <input type="text" className="industrial-input" value={item.size_b} onChange={(e) => updateItem(idx, 'size_b', e.target.value)} placeholder='e.g. 1000' />
+                  </div>
+
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">Quantity</label>
+                    <input type="number" className="industrial-input" value={item.quantity} onChange={(e) => updateItem(idx, 'quantity', Number(e.target.value))} />
+                  </div>
+
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">HSN Code</label>
+                    <input type="text" className="industrial-input" value={item.hsn_code} onChange={(e) => updateItem(idx, 'hsn_code', e.target.value)} />
+                  </div>
+
+                  <div className="space-y-1 col-span-1">
+                    <label className="industrial-label">Unit Price</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      className="industrial-input"
+                      value={item.unit_price}
+                      onChange={(e) => updateItem(idx, 'unit_price', Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <label className="industrial-label">Description</label>
+                  <textarea className="industrial-input h-20" value={item.description} onChange={(e) => updateItem(idx, 'description', e.target.value)} />
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="industrial-label">Invoice Date</label>
-                <input 
-                  type="date" 
-                  className="industrial-input" 
-                  value={formData.invoice_date}
-                  onChange={(e) => setFormData({...formData, invoice_date: e.target.value})}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="industrial-label">Tax % (GST)</label>
-                <input 
-                  type="number" 
-                  className="industrial-input" 
-                  value={formData.tax_percent}
-                  onChange={(e) => setFormData({...formData, tax_percent: Number(e.target.value)})}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="industrial-label">Tax Amount</label>
-                <input readOnly type="text" className="industrial-input bg-gray-50" value={formData.tax_amount?.toFixed(2)} />
-              </div>
-            </div>
-            <div className="pt-4 border-t border-[#F0F0F0]">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-bold uppercase text-[#666666]">Final Amount (INR)</span>
-                <span className="text-xl font-black">₹{formData.final_amount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
+
+        {/* Summary Table: Item Prices */}
+        <div className="industrial-card p-4">
+          <h4 className="text-sm font-bold mb-3">Items Summary</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                        <tr className="text-left text-[10px] text-black/50 uppercase">
+                          <th className="p-2">S.No</th>
+                          <th className="p-2">Item</th>
+                          <th className="p-2">Unit Price ({formData.currency})</th>
+                          <th className="p-2">Total Price ({formData.currency})</th>
+                          <th className="p-2">Delivery Date</th>
+                          <th className="p-2">Currency Conv</th>
+                          <th className="p-2">Unit Price (INR)</th>
+                          <th className="p-2">Total Price (INR)</th>
+                        </tr>
+              </thead>
+              <tbody>
+                {(formData.items || []).map((it: any, i: number) => {
+                  const unit = Number(it.unit_price || 0);
+                  const qty = Number(it.quantity || 0);
+                  const conv = Number(it.currency_conv || formData.conversion_rate || 1);
+                  const unitInr = unit * conv;
+                  const total = unit * qty;
+                  const totalInr = unitInr * qty;
+                  return (
+                    <tr key={i} className="border-t">
+                      <td className="p-2">{i + 1}</td>
+                      <td className="p-2">{formData.order_number}-{i+1}</td>
+                      <td className="p-2">{unit.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                      <td className="p-2">{total.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                      <td className="p-2"><input type="date" className="industrial-input" value={it.delivery_date || ''} onChange={(e)=>updateItem(i,'delivery_date', e.target.value)} /></td>
+                      <td className="p-2"><input type="text" inputMode="decimal" className="industrial-input w-28" value={it.currency_conv !== undefined ? it.currency_conv : formData.conversion_rate} onChange={(e)=>updateItem(i,'currency_conv', Number(e.target.value))} /></td>
+                      <td className="p-2">₹{unitInr.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                      <td className="p-2">₹{totalInr.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                    </tr>
+                  )
+                })}
+                <tr className="border-t font-bold">
+                  <td className="p-2">&nbsp;</td>
+                  <td className="p-2">Totals</td>
+                  <td className="p-2">&nbsp;</td>
+                  <td className="p-2">{summaryTotals.totalCurrency.toLocaleString(undefined,{minimumFractionDigits:2})} {formData.currency}</td>
+                  <td className="p-2">Total Qty: {summaryTotals.totalQty}</td>
+                  <td className="p-2">&nbsp;</td>
+                  <td className="p-2">₹{summaryTotals.totalInr.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                  <td className="p-2">₹{summaryTotals.totalInr.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Removed Price & Currency, Delivery Details, and Invoice Details as requested */}
 
         <div className="flex justify-end gap-4 pt-4">
           <button type="button" onClick={onBack} className="industrial-btn-secondary">Cancel</button>

@@ -1,5 +1,8 @@
 {
-  "name": "Edgeflex",
-  "description": "Industrial-grade Customer Relationship Management system for Edgeflex, featuring comprehensive customer, branch, and contact management.",
+  "name": "Edgeflex CRM",
+  "version": "1.0.0",
+  "description": "Industrial-grade Customer Relationship Management system featuring comprehensive customer, branch, and contact management.",
+  "date": "2026-06-11",
+  "author": "Edgeflex Team",
   "requestFramePermissions": []
 }
